@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="description" content="Coarse-to-Fine Autoregressive Policy">
+  <meta name="keywords" content="KORR, Reinforcement Learning, Imitation Learning, Machine Learning for Robot Control">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>KORR</title>
+
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-PYVRSFMDRL"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() {
+      dataLayer.push(arguments);
+    }
+    gtag('js', new Date());
+    gtag('config', 'G-PYVRSFMDRL');
+  </script>
+
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./static/css/bulma.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-carousel.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-slider.min.css">
+  <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="./static/css/index.css">
+  <link rel="icon" href="./static/etc/korr-logo.svg">
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script defer src="./static/js/fontawesome.all.min.js"></script>
+  <script src="./static/js/bulma-carousel.min.js"></script>
+  <script src="./static/js/bulma-slider.min.js"></script>
+  <script src="./static/js/index.js"></script>
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=AM_HTMLorMML-full"></script>
+  <style>
+    .video-row {
+      margin-bottom: 20px;
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.20);
+      background-color: #f9f9f9;
+    }
+    .gif-row {
+      margin-bottom: 20px;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.20);
+      background-color: #f9f9f9;
+    }
+
+    section.section {
+      padding-top: 1rem;
+      padding-bottom: 1rem;
+    }
+
+    .section h2.title, .section h3.subtitle {
+      margin-top: 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .section p {
+      margin-top: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .custom-icon {
+      width: 72px; 
+      height: 72px; 
+      vertical-align: middle; 
+      margin-right: 0px; 
+    }
+
+    .artistic-font {
+      font-family: 'Lobster', cursive; 
+      font-size: 48px; 
+      color: #ff8f33; 
+      text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3); 
+    }
+    .publication-authors a {
+      color: #0c879cfc !important;
+      text-decoration: none !important;
+    }
+    .publication-authors a:hover {
+      color: #0c879cfc  !important;
+      text-decoration: underline  !important;
+    }
+
+  </style>
+</head>
+<body>
+
+<!-- <nav class="navbar" role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false">
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+    </a>
+  </div>
+  <div class="navbar-menu">
+    <div class="navbar-start" style="flex-grow: 1; justify-content: center;">
+      <a class="navbar-item" href="https://keunhong.com">
+      <span class="icon">
+          <i class="fas fa-home"></i>
+      </span>
+      </a>
+
+      <div class="navbar-item has-dropdown is-hoverable">
+        <a class="navbar-link">
+          More Research
+        </a>
+        <div class="navbar-dropdown">
+          <a class="navbar-item" href="https://hypernerf.github.io">
+            HyperNeRF
+          </a>
+          <a class="navbar-item" href="https://nerfies.github.io">
+            Nerfies
+          </a>
+          <a class="navbar-item" href="https://latentfusion.github.io">
+            LatentFusion
+          </a>
+          <a class="navbar-item" href="https://photoshape.github.io">
+            PhotoShape
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</nav> -->
+
+<section class="hero">
+  <div class="hero-body">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered">
+        <div class="column has-text-centered">
+          
+          <!-- <h1 class="title is-size-1 publication-title">
+            <img src="static/etc/carp-logo.svg" alt="Custom Symbol" class="custom-icon">
+            <span class="artistic-font">CARP</span>
+          </h1>           -->
+          
+          <h4 class="subtitle is-size-2 publication-subtitle">
+            <strong>
+            Robust Online Residual Refinement <br>
+            via Koopman-Guided Dynamics Modeling
+            </strong>
+          </h4>
+          
+          <div class="is-size-4 publication-authors">
+            <span class="author-block">
+              <a href="https://zhefeigong.github.io">Zhefei Gong</a><sup style="font-size:0.6em; font-weight: normal;">1</sup>,
+            </span>
+            <span class="author-block">
+              <a href="https://lsk-robot.github.io/">Shangke Lyu</a><sup style="font-size:0.6em; font-weight: normal;">2✉</sup>,
+            </span>
+            <span class="author-block">
+              <a href="https://dingpx.github.io/">Pengxiang Ding</a><sup style="font-size:0.6em; font-weight: normal;">13</sup>,
+            </span>
+            <span class="author-block">
+              <a href="https://xiaowei-i.github.io/">Wei Xiao</a><sup style="font-size:0.6em; font-weight: normal;">1</sup>,
+            </span>
+            <br>
+            <span class="author-block">
+              <a href="https://en.westlake.edu.cn/faculty/donglin-wang.html">Donglin Wang</a><sup style="font-size:0.6em; font-weight: normal;">1✉</sup>
+            </span>
+          </div>
+          
+          <!-- <div class="is-size-5 publication-authors">
+            <span class="author-block">
+              <span style="color: rgb(177, 44, 44); font-weight: bold;">ICCV 2025</span>
+            </span>
+          </div> -->
+
+          <sup>1</sup>Westlake University, <sup>2</sup>Nanjing University, <sup>3</sup>Zhejiang University <br>
+          <sup>✉</sup>Corresponding author.
+
+          <!-- <div class="container is-max-desktop">
+            <div class="columns is-centered has-text-centered">
+              <div class="column is-four-fifths">
+                <figure class="image is-centered" style="margin-bottom: 0;">
+                  <img src="./static/images/logo.jpg" alt="Stanford University">
+                </figure>
+              </div>
+            </div>
+          </div> -->
+          
+          <div class="column has-text-centered">
+            <div class="publication-links">
+
+              <!-- PDF Link. -->
+              <span class="link-block">
+                <a href="./static/paper/KORR.pdf"
+                   class="external-link button is-normal is-rounded is-dark" target="_blank">
+                  <span class="icon">
+                      <i class="fas fa-file-pdf"></i>
+                  </span>
+                  <span>Paper</span>
+                </a>
+              </span>
+
+              <!-- arXiv Link. -->
+              <span class="link-block">
+                <a href="https://arxiv.org/abs/2412.06782"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <i class="ai ai-arxiv"></i>
+                  </span>
+                  <span>arXiv</span>
+                </a>
+              </span>
+
+              <!-- Code Link. -->
+              <!-- <span class="link-block">
+                <a href="https://github.com/ZhefeiGong/carp"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <i class="fab fa-github"></i>
+                  </span>
+                  <span>Code</span>
+                  </a>
+              </span> -->
+
+              <!-- Huggingface Link. -->
+              <!-- <span class="link-block">
+                <a href="https://huggingface.co/zhefeigong/carp"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <i class="fas fa-smile-beam"></i>
+                  </span>
+                  <span>Huggingface</span>
+                </a>
+              </span> -->
+
+              <!-- Coverage Link. -->
+              <!-- <span class="link-block">
+                <a href="https://mp.weixin.qq.com/s/X1ixcL0ByooM1nV-FZ5vUQ"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <i class="fas fa-newspaper"></i>
+                  </span>
+                  <span>Coverage (zh)</span>
+                </a>
+              </span> -->
+
+              <!-- Dataset Link. -->
+              <!-- <span class="link-block">
+                <a href="https://github.com/google/nerfies/releases/tag/0.1"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <i class="far fa-images"></i>
+                  </span>
+                  <span>Data</span>
+                  </a> -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- <section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <figure class="image is-centered" style="margin-bottom: 0;">
+          <video autoplay loop muted playsinline>
+            <source src="./static/mp4/CARP_pre.mp4" type="video/mp4">
+          </video>
+        </figure>
+      </div>
+    </div>
+  </div>
+</section> -->
+
+<!-- Abstract. -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3" style="background-color: #f0f0f0; padding: 10px;">Abstract</h2>
+        <div class="content has-text-justified">
+          <p>
+            Imitation learning (IL) enables efficient skill acquisition from demonstrations but often struggles with long-horizon tasks and high-precision control due to compounding errors. 
+            Residual policy learning offers a promising, model-agnostic solution by refining a base policy through closed-loop corrections. 
+            However, existing approaches primarily focus on local corrections to the base policy, lacking a global understanding of state evolution, which limits robustness and generalization to unseen scenarios.
+            % restricts them to local refinements
+            To address this, we propose incorporating global dynamics modeling to guide residual policy updates. Specifically, we leverage Koopman operator theory to impose linear time-invariant structure in a learned latent space, enabling reliable state transitions and improved extrapolation for long-horizon prediction and unseen environments.
+            We introduce <strong>KORR</strong> (<strong>K</strong>oopman-guided <strong>O</strong>nline <strong>R</strong>esidual <strong>R</strong>efinement), a simple yet effective framework that conditions residual corrections on Koopman-predicted latent states, enabling globally informed and stable action refinement.
+            We evaluate KORR on long-horizon, fine-grained robotic furniture assembly tasks under various perturbations. Results demonstrate consistent gains in performance, robustness, and generalization over strong baselines. 
+            Our findings further highlight the potential of Koopman-based modeling to bridge modern learning methods with classical control theory.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Introduction. -->
+<section class="section" style="padding-top: 1rem;">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3" style="background-color: #f0f0f0; padding: 10px;">Introduction</h2>
+    </div>
+  </div>
+</section>
+<section class="section" style="padding-top: 0rem;">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <!-- <figure class="image is-centered" style="margin-top: 0; margin-bottom: 0;">
+          <img src="./static/img/intro.png" alt="method_intro" style="width: 100%; height: auto; display: block; margin: 0 auto;">
+        </figure> -->
+        <p style="text-align:left;">
+          🤔 <strong>Conventional residual policies</strong> sample corrections only near base actions, resulting in limited global awareness and poor extrapolation to novel or unseen situations. 
+          Consequently, when base actions deviate substantially due to model uncertainty, residual policies often fail to recover, regardless of the base policy's quality.
+          <br>
+          🤔 <strong>Koopman operator theory</strong> provides a compelling framework by lifting complex nonlinear dynamics into a linear latent space. 
+          In this lifted space, inherently nonlinear and coupled dynamics are represented as finite-dimensional, decoupled, and time-invariant linear transitions, which enables more reliable and globally consistent modeling of motion dynamics. 
+          It also alleviates the exponential instabilities often encountered in nonlinear systems, facilitating more stable online training.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" style="padding-top: 1rem;">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3" style="background-color: #f0f0f0; padding: 10px;">Method</h2>
+        <h3 class="subtitle is-4" style="background-color: #f0f0f0; padding: 1px;">Koopman-guided Online Residual Refinement</h3>
+    </div>
+  </div>
+</section>
+<section class="section" style="padding-top: 1rem;">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <!-- <div class="column is-four-fifths"> -->
+      <div class="column is-full">
+        <figure class="image is-centered" style="margin-top: 0; margin-bottom: 0;">
+          <img src="./static/img/frame.png" alt="method_frame" style="width: 80%; height: auto; display: block; margin: 0 auto;">
+        </figure>
+        <p>
+          <small>
+          <strong>Overview of KORR.</strong>
+          The base policy predicts a chunk of base actions at a lower frequency, while KORR refines these actions step-by-step at a higher control rate. 
+          For each base action $\boldsymbol{a}_{\text{base}_t}$, KORR extrapolates the next possible state $\mathbf{z}_{t+1}$ using Koopman dynamics as an imagined future state, and then conditions the residual policy on this state to generate a corrective residual action $\boldsymbol{a}_{\text{res}_t}$. 
+          The final executed action, obtained by combining the base and residual actions, forms a closed-loop refinement that enhances robustness and generalization.
+          </small>
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="section" style="padding-top: 0rem;">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <div class="content has-text-justified">          
+          <div style="background-color: #f5f5f5; padding: 1rem; margin-top: 1rem; border-radius: 8px; box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);">
+            <p>
+              <div class="formula">
+              <strong>Koopman-Guided Dynamics Modeling</strong> :
+
+              The Koopman operator, represented by a matrix $\mathbf{K}$, captures the linear evolution of system dynamics in the lifted latent space. 
+              Following~\refeq{equation:prelim_koopman_function}, we decompose $\mathbf{K}$ into two matrices, $\mathbf{A}$ and $\mathbf{B}$, 
+              corresponding to the contributions from the current state $\mathbf{z}_t$ and the control input $\boldsymbol{a}_t$, respectively.
+              \begin{equation}
+              \mathbf{A} \cdot \mathbf{z}_t + \mathbf{B} \cdot \boldsymbol{a}_t = \mathbf{z}_{t+1}
+              \label{equation:method_koopman_function}
+              \end{equation}
+
+              To learn the Koopman operators $\mathbf{A}$, $\mathbf{B}$, and the lift function parameters $\theta$, 
+              we optimize them via gradient backpropagation to minimize the model prediction loss $\mathcal{L}$ (see~\refeq{equation:prelim_koopman_loss}). 
+              Specifically, given a dataset $\mathcal{D} = {(\mathbf{x}_0, \boldsymbol{a}_0), \dots, (\mathbf{x}_M, \boldsymbol{a}_M)}$ of state-action trajectories, 
+              where $\boldsymbol{a}$ (equivalently $\boldsymbol{a}_\text{exe}$) denotes the action executed in the environment, 
+              the objective is to minimize the MSE loss as follows:
+              \begin{equation}
+              \mathcal{L}_{\text{kpm}} = \mathbb{E}_{t\sim\mathcal{D}}||\mathbf{z}_{t+1}-(\mathbf{A} \cdot \mathbf{z}_t+\mathbf{B} \cdot \boldsymbol{a}_t)||^2 
+              \ ; \ 
+              \mathbf{z}_{t+1} = g_{\theta}(\mathbf{x}_{t+1})
+              \label{equation:method_koopman_loss}
+              \end{equation}
+
+              </div>
+            </p>
+          </div>          
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="section" style="padding-top: 0rem;">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <div class="content has-text-justified">          
+          <div style="background-color: #f5f5f5; padding: 1rem; margin-top: 1rem; border-radius: 8px; box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);">
+            <p>
+              <div class="formula">
+              <strong>Residual Policy through Koopman Imagination</strong> :
+
+              Using Koopman dynamics, we first project the next imagined state $\mathbf{z}^{\text{base}}_{t+1}$ based on executing $\boldsymbol{a}_{\text{base}_t}$. Then, the residual policy $\pi_{\text{res}}$ conditions on this imagined state to generate the residual action $\boldsymbol{a}_{\text{res}_t}$(see~\refeq{equation:method_koopman_imaginary}). 
+              Finally, the executable action $\boldsymbol{a}_{\text{exe}_t}$ is computed by summing the base action $\boldsymbol{a}_{\text{base}_t}$ and the residual action $\boldsymbol{a}_{\text{res}_t}$.
+              \begin{equation}
+              \mathbf{A} \cdot g_{\theta}(\mathbf{x}_t) + \mathbf{B} \cdot \boldsymbol{a}_{\text{base}_t} = \mathbf{z}^{\text{base}}_{t+1}
+              \ ;\ 
+              \boldsymbol{a}_{\text{res}_t} = \pi_{\text{res}}(\mathbf{z}^{\text{base}}_{t+1})
+              \label{equation:method_koopman_imaginary}
+              \end{equation}
+
+              </div>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3" style="background-color: #f0f0f0; padding: 10px;">Experiment</h2>
+        <!-- <h3 class="subtitle is-4">Coarse-to-Fine Autoregressive Policy</h3> -->
+        <div class="content has-text-justified">
+          Our experiments are structured to address the following key research questions: 
+          <strong>RQ1</strong>: Does KORR improve robustness and performance over traditional residual policies?
+          <strong>RQ2</strong>: Does Koopman modeling offer advantages over nonlinear dynamics for residual learning?
+          <strong>RQ3</strong>: Which design choices in KORR are critical for stable performance?
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container is-max-desktop">
+
+    <div class="content has-text-centered">
+      <h1 class="title is-3">General Robustness and Performance Study</h1>  
+    </div>
+    <figure class="image is-centered" style="margin-top: 0; margin-bottom: 0;">
+      <img src="./static/img/tab1.1.png" alt="general_results_1" style="width: 80%; height: auto; display: block; margin: 0 auto;">
+    </figure>
+    <!-- <div class="content has-text-justified">
+      <p>
+        We report the average success rate of the top 3 checkpoints, along with model parameter scales and inference time, with our results highlighted in light-blue.
+        CARP significantly outperforms BET, especially on challenging metrics like and Square p4 in Kitchen, 
+        and achieves competitive performance with state-of-the-art diffusion models, while also surpassing DP in terms of model size and inference speed 
+        (supporting <strong>RQ1</strong> and <strong>RQ2</strong>).
+      </p>
+    </div> -->
+    <figure class="image is-centered" style="margin-top: 0; margin-bottom: 0;">
+      <img src="./static/img/tab1.2.png" alt="general_results_2" style="width: 80%; height: auto; display: block; margin: 0 auto;">
+    </figure>
+    <!-- <div class="content has-text-justified">
+      <p>
+        <strong>Visualization of the Trajectory and Refining Process</strong>. 
+        The left panel shows the final predicted trajectories for each task, with CARP producing smoother and more consistent paths than Diffusion Policy (DP). 
+        The right panel visualizes intermediate trajectories during the refinement process for CARP (top-right) and DP (bottom-right). 
+        DP displays considerable redundancy, resulting in slower processing and unstable training, as illustrated by 6 selected steps among 100 denoising steps. 
+        In contrast, CARP achieves efficient trajectory refinement across all 4 scales, with each step contributing meaningful updates. 
+      </p>
+    </div> -->
+    <br>
+
+    <div class="content has-text-centered">
+      <h1 class="title is-3">Linear Benefit Study</h1>  
+    </div>
+    <figure class="image is-centered" style="margin-top: 0; margin-bottom: 0;">
+      <img src="./static/img/tab2.1.png" alt="linear_benefit_1" style="width: 80%; height: auto; display: block; margin: 0 auto;">
+    </figure>
+    <!-- <div class="content has-text-justified">
+      <p>
+        CARP achieves up to a 25% average improvement in success rates compared to state-of-the-art diffusion-based policies, highlighting its strong performance. 
+        Additionally, CARP achieves over 10× faster inference speed and uses only 10% of the parameters compared to SDP. 
+        With minimal modification, CARP seamlessly transitions from single-task to multi-task learning, further demonstrating its flexibility, 
+        a benefit of its GPT-style architecture (supporting <strong>RQ3</strong>).
+      </p>
+    </div> -->
+    <figure class="image is-centered" style="margin-top: 0; margin-bottom: 0;">
+      <img src="./static/img/tab2.2.png" alt="linear_benefit_2" style="width: 80%; height: auto; display: block; margin: 0 auto;">
+    </figure>
+    
+    <br>
+    
+    <div class="content has-text-centered">
+      <h1 class="title is-3">Additional Ablation Study</h1>  
+    </div>
+    <figure class="image is-centered" style="margin-top: 0; margin-bottom: 0;">
+      <img src="./static/img/tab3.png" alt="ablation_results" style="width: 80%; height: auto; display: block; margin: 0 auto;">
+    </figure>
+    
+    <!-- <div class="content has-text-justified">
+      <p>
+        We visualize the action prediction and execution of Diffusion Policy and CARP in the left panel, using the same prediction horizon and execution length (with a 4x speed-up for quicker viewing). 
+        CARP demonstrates faster execution due to its higher inference speed. 
+        In the right panel, we test both policies on a moving object; 
+        CARP maintains better alignment with the object thanks to its faster response time.
+      </p>
+      <p>
+        CARP achieves comparable or superior performance, with up to a 10% improvement in success rate over the diffusion policy across all real-world tasks (supporting <strong>RQ1</strong>). 
+        Additionally, CARP achieves approximately \( 8\times \) faster inference than the baseline on limited computational resources, demonstrating its suitability for real-time robotic applications (supporting <strong>RQ2</strong>).
+      </p>
+    </div> -->
+
+  </div>
+</section>
+
+<section class="section" id="BibTeX">
+  <div class="container is-max-desktop content">
+    <h2 class="title">BibTeX</h2>
+    <pre><code>@misc{gong2025robustonlineresidualrefinement,
+      title={Robust Online Residual Refinement via Koopman-Guided Dynamics Modeling}, 
+      author={Zhefei Gong and Shangke Lyu and Pengxiang Ding and Wei Xiao and Donglin Wang},
+      year={2025},
+      eprint={2509.*****},
+      archivePrefix={arXiv},
+      primaryClass={cs.RO},
+      url={https://arxiv.org/abs/2509.*****}, 
+}</code></pre>
+  </div>
+</section>
+
+<footer class="footer">
+  <!-- <div class="content has-text-centered">
+    <span class="author-block"><sup>*</sup>Equal Contribution</span>
+  </div> -->
+  <div class="container">
+    <div class="content has-text-centered">
+      <p>Page template borrowed from <a href="https://nerfies.github.io/"><span class="dnerf">Nerfies</span></a> and <a href="https://carp-robot.github.io/"><span class="dnerf">CARP</span></a>.</p>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
