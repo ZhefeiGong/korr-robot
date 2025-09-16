@@ -288,7 +288,6 @@
             Imitation learning (IL) enables efficient skill acquisition from demonstrations but often struggles with long-horizon tasks and high-precision control due to compounding errors. 
             Residual policy learning offers a promising, model-agnostic solution by refining a base policy through closed-loop corrections. 
             However, existing approaches primarily focus on local corrections to the base policy, lacking a global understanding of state evolution, which limits robustness and generalization to unseen scenarios.
-            % restricts them to local refinements
             To address this, we propose incorporating global dynamics modeling to guide residual policy updates. Specifically, we leverage Koopman operator theory to impose linear time-invariant structure in a learned latent space, enabling reliable state transitions and improved extrapolation for long-horizon prediction and unseen environments.
             We introduce <strong>KORR</strong> (<strong>K</strong>oopman-guided <strong>O</strong>nline <strong>R</strong>esidual <strong>R</strong>efinement), a simple yet effective framework that conditions residual corrections on Koopman-predicted latent states, enabling globally informed and stable action refinement.
             We evaluate KORR on long-horizon, fine-grained robotic furniture assembly tasks under various perturbations. Results demonstrate consistent gains in performance, robustness, and generalization over strong baselines. 
