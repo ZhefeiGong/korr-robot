@@ -369,7 +369,7 @@
               <strong>Koopman-Guided Dynamics Modeling</strong> :
 
               The Koopman operator, represented by a matrix \( \mathbf{K} \), captures the linear evolution of system dynamics in the lifted latent space. 
-              Following~\refeq{equation:prelim_koopman_function}, we decompose \( \mathbf{K} \) into two matrices, \( \mathbf{A} \) and \( \mathbf{B} \), 
+              We decompose \( \mathbf{K} \) into two matrices, \( \mathbf{A} \) and \( \mathbf{B} \), 
               corresponding to the contributions from the current state \( \mathbf{z}_t \) and the control input \( \boldsymbol{a}_t \), respectively.
               \begin{equation}
               \mathbf{A} \cdot \mathbf{z}_t + \mathbf{B} \cdot \boldsymbol{a}_t = \mathbf{z}_{t+1}
@@ -377,7 +377,7 @@
               \end{equation}
 
               To learn the Koopman operators \( \mathbf{A} \), \( \mathbf{B} \), and the lift function parameters \( \theta \), 
-              we optimize them via gradient backpropagation to minimize the model prediction loss \( \mathcal{L} \) (see~\refeq{equation:prelim_koopman_loss}). 
+              we optimize them via gradient backpropagation to minimize the model prediction loss \( \mathcal{L} \). 
               Specifically, given a dataset \( \mathcal{D} = {(\mathbf{x}_0, \boldsymbol{a}_0), \dots, (\mathbf{x}_M, \boldsymbol{a}_M)} \) of state-action trajectories, 
               where \( \boldsymbol{a} \) (equivalently \( \boldsymbol{a}_\text{exe} \)) denotes the action executed in the environment, 
               the objective is to minimize the MSE loss as follows:
@@ -406,7 +406,7 @@
               <div class="formula">
               <strong>Residual Policy through Koopman Imagination</strong> :
 
-              Using Koopman dynamics, we first project the next imagined state \( \mathbf{z}^{\text{base}}_{t+1} \) based on executing \( \boldsymbol{a}_{\text{base}_t} \). Then, the residual policy \( \pi_{\text{res}} \) conditions on this imagined state to generate the residual action \( \boldsymbol{a}_{\text{res}_t} \) (see~\refeq{equation:method_koopman_imaginary}). 
+              Using Koopman dynamics, we first project the next imagined state \( \mathbf{z}^{\text{base}}_{t+1} \) based on executing \( \boldsymbol{a}_{\text{base}_t} \). Then, the residual policy \( \pi_{\text{res}} \) conditions on this imagined state to generate the residual action \( \boldsymbol{a}_{\text{res}_t} \). 
               Finally, the executable action \( \boldsymbol{a}_{\text{exe}_t} \) is computed by summing the base action \( \boldsymbol{a}_{\text{base}_t} \) and the residual action \( \boldsymbol{a}_{\text{res}_t} \).
               \begin{equation}
               \mathbf{A} \cdot g_{\theta}(\mathbf{x}_t) + \mathbf{B} \cdot \boldsymbol{a}_{\text{base}_t} = \mathbf{z}^{\text{base}}_{t+1}
